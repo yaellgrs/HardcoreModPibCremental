@@ -1,0 +1,40 @@
+## Dossiers Visual Studio
+.vs/
+.vscode/
+
+## Dossiers de build
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+
+## Fichiers utilisateur (spécifiques à ta machine)
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## NuGet
+packages/
+*.nupkg
+project.lock.json
+project.fragment.lock.json
+
+## Fichiers de résultats de build
+*.dll
+*.exe
+*.pdb
+*.cache
+
+## ReSharper / Rider (si jamais tu les utilises)
+_ReSharper*/
+*.DotSettings.user
+
+## Fichiers temporaires Windows
+Thumbs.db
+Desktop.ini
+
+## Fichiers de log
+*.log
