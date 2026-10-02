@@ -13,22 +13,56 @@ public class HardcoreMod : BaseUnityPlugin
         harmony.PatchAll();
     }
 
+    public static double GetPriceMultiplier(int n)
+    {
+        return 1.0 + (n * 0.5);
+    }
+
+
+    //augmenter le prix
     [HarmonyPatch(typeof(UpgradeData), nameof(UpgradeData.GetScaledCost))]
     public class UpgradeCostPatch
     {
         static void Postfix(UpgradeData __instance, int n, ref double __result)
         {
-            double escalation = 1.0 + (n * 0.25);
-            __result *= HardcoreMod.CostMultiplier * escalation;
+            if(__instance.GetDisplayName(n) != "Assign Pib")
+            {
+                __result *= HardcoreMod.CostMultiplier * HardcoreMod.GetPriceMultiplier(n);
+            }
+
         }
     }
 
+    //réduire les effets d'amélioreration
     [HarmonyPatch(typeof(UpgradeData), nameof(UpgradeData.GetScaledEffectValue))]
     public class UpgradeEffectPatch
     {
         static void Postfix(UpgradeData __instance, int n, ref double __result)
         {
             __result *= 0.5;
+        }
+    }
+
+    //retirer le click
+    [HarmonyPatch(typeof(CS_ClickRateManager), nameof(CS_ClickRateManager.TryConsumeClick))]
+    public class DisableClickPatch
+    {
+        static bool Prefix(ref bool __result)
+        {
+            __result = false; 
+            return false;     
+        }
+    }
+
+    //premier pib gratuit
+    //les autres aux prix augmenté
+    [HarmonyPatch(typeof(PibRockExtension), "GetSapCostAt")]
+    public class FixPibbleSapCost
+    {
+        static void Postfix(int index, ref double __result)
+        {
+            //if (index == 0) return 0.0;
+            __result *= HardcoreMod.CostMultiplier * HardcoreMod.GetPriceMultiplier(index);
         }
     }
 }
