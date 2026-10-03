@@ -1,5 +1,7 @@
 ﻿using BepInEx;
 using HarmonyLib;
+using UnityEngine;
+using UnityEngine.UI;
 
 [BepInPlugin("nisshoku.pibcremental.hardcore", "Hardcore", "1.0.0")]
 public class HardcoreMod : BaseUnityPlugin
@@ -63,6 +65,16 @@ public class HardcoreMod : BaseUnityPlugin
         {
             //if (index == 0) return 0.0;
             __result *= HardcoreMod.CostMultiplier * HardcoreMod.GetPriceMultiplier(index);
+        }
+    }
+
+    [HarmonyPatch(typeof(CS_PapaPibble), "Awake")]
+    public class PibRockHeatlBar
+    {
+        static void Postfix(CS_PapaPibble __instance)
+        {
+            HealthBar.CreateHealthBar(__instance.transform, "PapaPib");
+
         }
     }
 }
