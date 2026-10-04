@@ -1,17 +1,18 @@
 ﻿using BepInEx;
 using HarmonyLib;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.InputSystem;
 
-[BepInPlugin("nisshoku.pibcremental.hardcore", "Hardcore", "1.0.0")]
-public class HardcoreMod : BaseUnityPlugin
+[BepInPlugin("nisshoku.pibcremental.pibrevolution", "Hardcore", "1.0.0")]
+public class PibRevolution : BaseUnityPlugin
 {
     public static double CostMultiplier = 10.0;
 
     public void Awake()
     {
         Logger.LogInfo("Mod chargé !");
-        var harmony = new Harmony("nisshoku.pibcremental.hardcore");
+        var harmony = new Harmony("nisshoku.pibcremental.pibrevolution");
+
         harmony.PatchAll();
     }
 
@@ -29,7 +30,7 @@ public class HardcoreMod : BaseUnityPlugin
         {
             if(__instance.GetDisplayName(n) != "Assign Pib")
             {
-                __result *= HardcoreMod.CostMultiplier * HardcoreMod.GetPriceMultiplier(n);
+                __result *= PibRevolution.CostMultiplier * PibRevolution.GetPriceMultiplier(n);
             }
 
         }
@@ -64,7 +65,7 @@ public class HardcoreMod : BaseUnityPlugin
         static void Postfix(int index, ref double __result)
         {
             //if (index == 0) return 0.0;
-            __result *= HardcoreMod.CostMultiplier * HardcoreMod.GetPriceMultiplier(index);
+            __result *= PibRevolution.CostMultiplier * PibRevolution.GetPriceMultiplier(index);
         }
     }
 
@@ -75,6 +76,36 @@ public class HardcoreMod : BaseUnityPlugin
         {
             HealthBar.CreateHealthBar(__instance.transform, "PapaPib");
 
+        }
+    }
+
+    [HarmonyPatch(typeof(BuildingManager), "Awake")]
+    public class InitPopularityBar
+    {
+        static void Postfix()
+        {
+            RevoltManager.CreatePopularityBarre();
+
+        }
+    }
+
+    [HarmonyPatch(typeof(CentralUpdateManager), "Update")]
+    public class InputManager
+    {
+        static void Postfix()
+        {
+            if (Keyboard.current == null) return;
+
+            if (Keyboard.current.aKey.wasPressedThisFrame)
+            {
+                Debug.Log("A");
+                RevoltManager.UpPopularity(-10);
+            }
+            else if (Keyboard.current.eKey.wasPressedThisFrame)
+            {
+                Debug.Log("E");
+                RevoltManager.UpPopularity(10);
+            }
         }
     }
 }
