@@ -1,6 +1,8 @@
 ﻿using BepInEx;
 using HarmonyLib;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 [BepInPlugin("nisshoku.pibcremental.pibrevolution", "Hardcore", "1.0.0")]
@@ -110,6 +112,108 @@ public class PibRevolution : BaseUnityPlugin
                 Debug.Log("E");
                 RevoltManager.UpPopularity(10);
             }
+            if (Keyboard.current.tKey.wasPressedThisFrame) // "T" pour test
+            {
+                Vector2 screenPos = Mouse.current.position.ReadValue();
+                Vector3 mouseWorld = Camera.main.ScreenToWorldPoint(screenPos);
+                mouseWorld.z = 0;
+                Collider2D[] hits = Physics2D.OverlapPointAll(mouseWorld);
+                Debug.Log("HOVER TEST: " + string.Join(", ", hits.Select(h => h.gameObject.name)));
+            }
         }
     }
+
+    [HarmonyPatch(typeof(CS_PapaPibble), "Awake")]
+    public class AddHoverGlowPatchPapaPibble
+    {
+        static void Postfix(CS_PapaPibble __instance)
+        {
+            __instance.gameObject.AddComponent<PibGlowOnHover>();
+        }
+    }
+    [HarmonyPatch(typeof(CS_SapPibbleBehaviour), "Awake")]
+    public class AddHoverGlowPatchSapPibble
+    {
+        static void Postfix(CS_SapPibbleBehaviour __instance)
+        {
+            __instance.gameObject.AddComponent<PibGlowOnHover>();
+        }
+    }
+    [HarmonyPatch(typeof(CS_ScrapPibbleBehaviour), "Awake")]
+    public class AddHoverGlowPatchScrapPibble { 
+        static void Postfix(CS_ScrapPibbleBehaviour __instance)
+        {
+            __instance.gameObject.AddComponent<PibGlowOnHover>();
+        }
+    }
+    public class PibGlowOnHover : MonoBehaviour
+    {
+        private SpriteRenderer _renderer;
+        private Material _outlineMaterial;
+        private Material _originalMaterial; 
+        private Collider2D _myCollider;
+        private bool _isHovered;
+
+        void Awake()
+        {
+            _renderer = GetComponent<SpriteRenderer>();
+            if (_renderer == null)
+            {
+                _renderer = GetComponentInChildren<SpriteRenderer>();
+            }
+            _myCollider = GetComponent<Collider2D>();
+
+            if (_renderer == null) return;
+
+            _originalMaterial = _renderer.material; 
+
+            Shader outlineShader = Shader.Find("Shader Graphs/SG_Outline");
+            if (outlineShader != null)
+            {
+                _outlineMaterial = new Material(outlineShader);
+                _outlineMaterial.SetTexture("_MainTex", _renderer.sprite.texture);
+                _outlineMaterial.SetFloat("_OutlineThickness", 1f);
+                _outlineMaterial.SetColor("_OutlineColor", new Color(0, 0, 0, 0));
+            }
+        }
+
+            void Update()
+        {
+            if (Mouse.current == null || _myCollider == null) return;
+
+            Vector2 screenPos = Mouse.current.position.ReadValue();
+            Vector3 mouseWorld = Camera.main.ScreenToWorldPoint(screenPos);
+            mouseWorld.z = 0;
+
+            bool isOverThis = _myCollider.OverlapPoint(mouseWorld);
+
+            if (isOverThis && !_isHovered)
+            {
+                _isHovered = true;
+                Debug.Log("[PibGlowOnHover] HOVER ENTER détecté !");
+                OnHoverEnter();
+            }
+            else if (!isOverThis && _isHovered)
+            {
+                _isHovered = false;
+                Debug.Log("[PibGlowOnHover] HOVER EXIT détecté !");
+                OnHoverExit();
+            }
+        }
+
+        private void OnHoverEnter()
+        {
+            if (_outlineMaterial == null) return;
+            _renderer.material = _outlineMaterial;
+            _outlineMaterial.SetColor("_OutlineColor", Color.white);
+        }
+
+        private void OnHoverExit()
+        {
+            if (_originalMaterial == null) return;
+            _renderer.material = _originalMaterial; 
+        }
+    }
+
+
 }
