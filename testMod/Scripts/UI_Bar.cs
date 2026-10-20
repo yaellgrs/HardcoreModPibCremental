@@ -18,7 +18,10 @@ public class UI_Bar
     private float maxValue;
 
 
-
+    public void Show(bool isShow)
+    {
+        canvas.gameObject.SetActive(isShow);
+    }
 
     public UI_Bar(string name, RenderMode renderMode,  Vector2 size, Vector2 anchoredPos, Color color, float scale = 1f, Transform parent = null, float maxValue = 100f, Vector2? anchor = null, Vector3? localOffset = null, float nameLabelHight = -15f)
     {
@@ -34,6 +37,8 @@ public class UI_Bar
         GameObject canvasObj = new GameObject();
         canvas = canvasObj.AddComponent<Canvas>();
         canvas.renderMode = renderMode;
+        canvas.sortingOrder = 100;
+        canvas.overrideSorting = true;
         if(renderMode == RenderMode.ScreenSpaceOverlay)
         {
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -106,4 +111,7 @@ public class UI_Bar
 
     public TextMeshProUGUI GetValueLabel() { return Lbl_value; }
     public Image GetFilledImage() { return Img_fill; }
+
+
+
 }
