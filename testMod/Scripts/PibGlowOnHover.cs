@@ -1,6 +1,9 @@
-﻿using System;
+﻿using HarmonyLib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -12,14 +15,13 @@ public class PibGlowOnHover : MonoBehaviour
     private Material _outlineMaterial;
     private Material _originalMaterial;
     private Collider2D _myCollider;
-    private bool _isHovered;
+    public bool isHovered;
     private UI_Bar bar;
+    public static CS_SapPibbleBehaviour sapInstance;
 
-    //freeze
-    private Rigidbody2D _rb;
-    private CS_WorkerPibBase _worker;
-    private bool _frozen;
-    private RigidbodyConstraints2D _savedConstraints;
+    public bool _paused = false;
+
+    private Animator _anim;
 
 
     public void Initialize(UI_Bar bar)
@@ -31,8 +33,6 @@ public class PibGlowOnHover : MonoBehaviour
 
     void Awake()
     {
-        _worker = GetComponent<CS_WorkerPibBase>();
-        _rb = GetComponent<Rigidbody2D>();
 
         _renderer = GetComponent<SpriteRenderer>();
         if (_renderer == null)
@@ -54,6 +54,9 @@ public class PibGlowOnHover : MonoBehaviour
             _outlineMaterial.SetColor("_OutlineColor", new Color(0, 0, 0, 0));
         }
 
+
+        sapInstance = GetComponent<CS_SapPibbleBehaviour>();
+        _anim = GetComponentInChildren<Animator>();
     }
 
     void Update()
@@ -66,23 +69,42 @@ public class PibGlowOnHover : MonoBehaviour
 
         bool isOverThis = _myCollider.OverlapPoint(mouseWorld);
 
-        if (isOverThis && !_isHovered)
+        if (isOverThis && !isHovered)
         {
-            _isHovered = true;
-            Freeze();
+            isHovered = true;
             OnHoverEnter();
         }
-        else if (!isOverThis && _isHovered)
+        else if (!isOverThis && isHovered)
         {
-            _isHovered = false;
-            GetComponent<PibRevolt>()?.Add(0.1f);
-            Unfreeze();
+            isHovered = false;
             OnHoverExit();
         }
     }
 
+    private void Pause()
+    {
+        if (_paused || sapInstance == null) return;
+        var brain = CS_SapPibBrain.Instance;
+        if (brain == null) return;
+
+        brain.SetPaused(sapInstance, true);
+        if (_anim != null) _anim.speed = 0f;
+        _paused = true;
+    }
+
+    private void Resume()
+    {
+        if (!_paused) return;
+        _paused = false;
+
+        var brain = CS_SapPibBrain.Instance;
+        if (brain != null && sapInstance != null) brain.SetPaused(sapInstance, false);
+        if (_anim != null) _anim.speed = 1f;
+    }
+
     private void OnHoverEnter()
     {
+        Pause();
         if (_outlineMaterial == null) return;
         _renderer.material = _outlineMaterial;
         _outlineMaterial.SetColor("_OutlineColor", Color.white);
@@ -91,36 +113,30 @@ public class PibGlowOnHover : MonoBehaviour
 
     private void OnHoverExit()
     {
+        Resume();
         if (_originalMaterial == null) return;
         _renderer.material = _originalMaterial;
         if (bar != null) bar.Show(false);
     }
-    private void Freeze()
+}
+
+[HarmonyPatch(typeof(CS_SapPibbleBehaviour), "UpdateVisuals")]
+public class FreezeSapPibMovement
+{
+    public static float time = 0f;
+    static void Prefix(CS_SapPibbleBehaviour __instance)
     {
-        if (_worker == null || _worker.IsHeld || _frozen) return;
-        _frozen = true;
-
-        if (CentralUpdateManager.Instance != null)
-            CentralUpdateManager.Instance.Unregister(_worker); 
-
-        if (_rb != null)
+        time += Time.deltaTime;
+        if (time > 1f)
         {
-            _savedConstraints = _rb.constraints;
-            _rb.linearVelocity = Vector2.zero;
-            _rb.simulated = false;
-            _rb.constraints = RigidbodyConstraints2D.FreezeAll;
+            time = 0f;
+            if(UnityEngine.Random.Range(0, 100) <= 5)
+            {
+                Debug.Log("Add 1%");
+                __instance.GetComponent<PibRevolt>()?.Add(0.01f);
+            }
         }
+
     }
 
-    private void Unfreeze()
-    {
-        if (!_frozen) return;
-        _frozen = false;
-
-        if (_worker == null || _worker.IsHeld) return;
-
-        if (_rb != null) _rb.constraints = _savedConstraints;
-        if (CentralUpdateManager.Instance != null)
-            CentralUpdateManager.Instance.Register(_worker);
-    }
 }
