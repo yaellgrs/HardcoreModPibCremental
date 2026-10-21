@@ -15,6 +15,13 @@ public class PibGlowOnHover : MonoBehaviour
     private bool _isHovered;
     private UI_Bar bar;
 
+    //freeze
+    private Rigidbody2D _rb;
+    private CS_WorkerPibBase _worker;
+    private bool _frozen;
+    private RigidbodyConstraints2D _savedConstraints;
+
+
     public void Initialize(UI_Bar bar)
     {
         this.bar = bar;
@@ -24,6 +31,9 @@ public class PibGlowOnHover : MonoBehaviour
 
     void Awake()
     {
+        _worker = GetComponent<CS_WorkerPibBase>();
+        _rb = GetComponent<Rigidbody2D>();
+
         _renderer = GetComponent<SpriteRenderer>();
         if (_renderer == null)
         {
@@ -59,11 +69,14 @@ public class PibGlowOnHover : MonoBehaviour
         if (isOverThis && !_isHovered)
         {
             _isHovered = true;
+            Freeze();
             OnHoverEnter();
         }
         else if (!isOverThis && _isHovered)
         {
             _isHovered = false;
+            GetComponent<PibRevolt>()?.Add(0.1f);
+            Unfreeze();
             OnHoverExit();
         }
     }
@@ -81,5 +94,33 @@ public class PibGlowOnHover : MonoBehaviour
         if (_originalMaterial == null) return;
         _renderer.material = _originalMaterial;
         if (bar != null) bar.Show(false);
+    }
+    private void Freeze()
+    {
+        if (_worker == null || _worker.IsHeld || _frozen) return;
+        _frozen = true;
+
+        if (CentralUpdateManager.Instance != null)
+            CentralUpdateManager.Instance.Unregister(_worker); 
+
+        if (_rb != null)
+        {
+            _savedConstraints = _rb.constraints;
+            _rb.linearVelocity = Vector2.zero;
+            _rb.simulated = false;
+            _rb.constraints = RigidbodyConstraints2D.FreezeAll;
+        }
+    }
+
+    private void Unfreeze()
+    {
+        if (!_frozen) return;
+        _frozen = false;
+
+        if (_worker == null || _worker.IsHeld) return;
+
+        if (_rb != null) _rb.constraints = _savedConstraints;
+        if (CentralUpdateManager.Instance != null)
+            CentralUpdateManager.Instance.Register(_worker);
     }
 }

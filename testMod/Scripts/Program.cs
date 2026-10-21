@@ -10,7 +10,9 @@ using System.Reflection;
 [BepInPlugin("nisshoku.pibcremental.pibrevolution", "Hardcore", "1.0.0")]
 public class PibRevolution : BaseUnityPlugin
 {
-    public static double CostMultiplier = 10.0;
+    public static double CostMultiplier = 3.0;
+    public static double PopularityCostMultiplier = 25.0;
+
 
     public void Awake()
     {
@@ -22,7 +24,7 @@ public class PibRevolution : BaseUnityPlugin
 
     public static double GetPriceMultiplier(int n)
     {
-        return 1.0 + (n * 0.5);
+        return (1.0 + (n * 0.5)) + (PopularityCostMultiplier * ( 1.0f - RevoltManager.ChefPopularity));
     }
 
 
@@ -94,12 +96,16 @@ public class PibRevolution : BaseUnityPlugin
             if (Keyboard.current.aKey.wasPressedThisFrame)
             {
                 Debug.Log("A");
-                RevoltManager.UpPopularity(-10);
+                RevoltManager.UpPopularity(-0.1f);
             }
             else if (Keyboard.current.eKey.wasPressedThisFrame)
             {
                 Debug.Log("E");
-                RevoltManager.UpPopularity(10);
+                RevoltManager.UpPopularity(0.1f);
+            }
+            else if (Keyboard.current.fKey.wasPressedThisFrame)
+            {
+                CS_PrestigeManager.Instance.AddPrestigeXpPercent(100);
             }
         }
     }

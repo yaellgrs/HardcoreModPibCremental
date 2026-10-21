@@ -10,7 +10,7 @@ using UnityEngine.UI;
 
 public static class RevoltManager
 {
-    public static float ChefPopularity = 100f;
+    public static float ChefPopularity = 1.0f;
 
     //private static readonly ConditionalWeakTable<object, PibFatigue> _healthMap = new();
 
@@ -19,7 +19,7 @@ public static class RevoltManager
 
     public static void SetPopularity(float value)
     {
-        ChefPopularity = Mathf.Clamp(value, 0, 100f);
+        ChefPopularity = Mathf.Clamp(value, 0, 1.0f);
         refreshUI();
     }
 
@@ -31,11 +31,11 @@ public static class RevoltManager
     public static void refreshUI()
     {
         if(Lbl_pourcent != null){
-            Lbl_pourcent.text = ChefPopularity + "%";
+            Lbl_pourcent.text = (int)(ChefPopularity *100) + "%";
         }
         if (Img_fillBar != null)
         {
-            Img_fillBar.fillAmount = ChefPopularity/100f;
+            Img_fillBar.fillAmount = ChefPopularity/1.0f;
             Debug.Log("img fill amount : " + Img_fillBar.fillAmount);
         }
         else

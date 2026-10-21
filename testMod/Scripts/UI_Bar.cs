@@ -108,6 +108,12 @@ public class UI_Bar
         rect.sizeDelta = size;
     }
 
+    public void SetValue(float value)
+    {
+        Lbl_value.text = (int)(value * 100) + "%";
+        Img_fill.fillAmount = value / 1f;
+    }
+
 
     public TextMeshProUGUI GetValueLabel() { return Lbl_value; }
     public Image GetFilledImage() { return Img_fill; }
