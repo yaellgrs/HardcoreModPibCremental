@@ -19,7 +19,14 @@ public class PibRevolution : BaseUnityPlugin
         Logger.LogInfo("Mod chargé !");
         var harmony = new Harmony("nisshoku.pibcremental.pibrevolution");
 
+        RevoltManager.Init();
         harmony.PatchAll();
+    }
+
+    public void Update()
+    {
+        RevoltManager.Update();
+
     }
 
     public static double GetPriceMultiplier(int n)

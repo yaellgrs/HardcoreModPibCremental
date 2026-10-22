@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
+using UnityEngine.TestTools;
 using UnityEngine.UI;
 
 public static class RevoltManager
@@ -16,6 +17,52 @@ public static class RevoltManager
 
     private static TextMeshProUGUI Lbl_pourcent;
     private static Image Img_fillBar;
+
+    //revolt moyenne
+    private static int _count;
+    private static float _sum;
+    public static int Count => _count;
+    public static float Sum => _sum;
+    public static float Average => _count == 0 ? 0f : _sum / _count;
+
+
+    //events
+    public static event Action<float> OnAverageChanged;
+
+    public static void Init()
+    {
+        OnAverageChanged -= OnAverage;
+        OnAverageChanged += OnAverage;
+    }
+
+#region revolt moyenne
+
+    public static void NotifyRevoltChange(float delta)
+    {
+        _sum += delta;
+        OnAverageChanged?.Invoke(Average);
+    }
+
+    public static void Register(float revolt)
+    {
+        _count++;
+        _sum += revolt;
+        OnAverageChanged?.Invoke(Average);
+    }
+
+    public static void UnRegister(float revolt)
+    {
+        _count--;
+        _sum -= revolt;
+        OnAverageChanged?.Invoke(Average);
+    }
+
+    private static void OnAverage(float avg)
+    {
+        SetPopularity(1.0f - avg);
+    }
+
+    #endregion
 
     public static void SetPopularity(float value)
     {
@@ -55,7 +102,12 @@ public static class RevoltManager
 
         Lbl_pourcent = bar.GetValueLabel();
         Img_fillBar = bar.GetFilledImage();
-}
+    }
+
+    public static void Update()
+    {
+
+    }
 }
 /*
       }//    public static Canvas CreateWorldSpaceCanvas(string name, Transform parent, Vector3 localOffset, float scale = 0.01f)
