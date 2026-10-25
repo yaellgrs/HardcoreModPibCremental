@@ -76,6 +76,8 @@ public class UI_Bar
         string value = (maxValue + "/" + maxValue);
         Lbl_name = CreateLabel(canvas.transform, name, size, new Vector2(0, nameLabelHight), color: Color.black, anchor: anchor);
         Lbl_value = CreateLabel(canvas.transform, value, size, anchoredPos, color: Color.white, anchor: anchor);
+
+
     }
 
 
@@ -94,6 +96,21 @@ public class UI_Bar
 
         SetRect(obj.GetComponent<RectTransform>(), size, anchoredPos, anchor);
         return label;
+    }
+
+    public GameObject AddButton(string text, Vector2 size, Vector2 anchoredPos, Color color)
+    {
+        GameObject obj = new GameObject("Button");
+        obj.transform.SetParent(canvas.transform, false);
+
+        Image img = obj.AddComponent<Image>();
+        img.sprite = Sp_fillBarr;
+        img.color = color;
+        SetRect(obj.GetComponent<RectTransform>(), size, anchoredPos, null);
+
+        // le texte est enfant du bouton, centré dessus
+        CreateLabel(obj.transform, text, size, Vector2.zero, 16, Color.white);
+        return obj;
     }
 
     private static void SetRect(RectTransform rect, Vector2 size, Vector2 anchoredPos, Vector2? anchor)

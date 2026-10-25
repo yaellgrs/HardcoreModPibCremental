@@ -30,18 +30,21 @@ public class PibPatch
                 Vector2 anchoredPos = Vector2.zero;
                 Vector3 localOffset = new Vector3(0, 1.5f, 0);
                 UI_Bar bar = new UI_Bar("Pibble", RenderMode.WorldSpace, size, anchoredPos, Color.green, scale: 0.01f, parent: mb.gameObject.transform, localOffset: localOffset, nameLabelHight: 40);
+
+                bar.AddButton("UnAssign", new Vector2(200, 26), new Vector2(0, -50), new Color(0.7f, 0.1f, 0.1f, 1f));
+
                 PibGlowOnHover glow = mb.gameObject.AddComponent<PibGlowOnHover>();
                 glow.Initialize(bar);
                 if (mb.GetComponent<PibRevolt>() == null)
                 {
                     mb.gameObject.AddComponent<PibRevolt>();
                     mb.GetComponent<PibRevolt>().Init(bar);
+                }
+
+
             }
-
-            }
-
-
         }
+
     }
 
 }

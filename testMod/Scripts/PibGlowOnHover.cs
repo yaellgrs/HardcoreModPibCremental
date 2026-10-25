@@ -17,11 +17,14 @@ public class PibGlowOnHover : MonoBehaviour
     private Collider2D _myCollider;
     public bool isHovered;
     private UI_Bar bar;
-    public static CS_SapPibbleBehaviour sapInstance;
+    public static CS_SapPibbleBehaviour sapInstance = null;
+    public  CS_SapPibbleBehaviour _sap = null;
 
     public bool _paused = false;
 
     private Animator _anim;
+
+    public static bool locked = false;
 
 
     public void Initialize(UI_Bar bar)
@@ -54,14 +57,14 @@ public class PibGlowOnHover : MonoBehaviour
             _outlineMaterial.SetColor("_OutlineColor", new Color(0, 0, 0, 0));
         }
 
-
-        sapInstance = GetComponent<CS_SapPibbleBehaviour>();
+        _sap = GetComponent<CS_SapPibbleBehaviour>();
         _anim = GetComponentInChildren<Animator>();
     }
 
     void Update()
     {
         if (Mouse.current == null || _myCollider == null) return;
+        if (sapInstance != null && sapInstance != _sap) return;
 
         Vector2 screenPos = Mouse.current.position.ReadValue();
         Vector3 mouseWorld = Camera.main.ScreenToWorldPoint(screenPos);
@@ -69,16 +72,26 @@ public class PibGlowOnHover : MonoBehaviour
 
         bool isOverThis = _myCollider.OverlapPoint(mouseWorld);
 
-        if (isOverThis && !isHovered)
+        if (isOverThis && !isHovered && sapInstance == null)
         {
             isHovered = true;
+            sapInstance = _sap;
             OnHoverEnter();
         }
-        else if (!isOverThis && isHovered)
+        else if (!locked && !isOverThis && isHovered)
         {
             isHovered = false;
             OnHoverExit();
+            sapInstance = null;
         }
+
+
+        if (Mouse.current.rightButton.wasPressedThisFrame)
+        {
+            if (isOverThis) locked = true;
+            if (!isOverThis && locked) locked = false;
+        }
+
     }
 
     private void Pause()
@@ -132,7 +145,6 @@ public class FreezeSapPibMovement
             time = 0f;
             if(UnityEngine.Random.Range(0, 100) <= 5)
             {
-                Debug.Log("Add 1%");
                 __instance.GetComponent<PibRevolt>()?.Add(0.01f);
             }
         }
