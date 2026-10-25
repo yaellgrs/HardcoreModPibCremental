@@ -1,8 +1,10 @@
-﻿using System.Reflection.Emit;
+﻿using System;
+using System.Reflection.Emit;
 using System.Security.Policy;
 using System.Xml.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class UI_Bar
@@ -17,6 +19,8 @@ public class UI_Bar
     private TextMeshProUGUI Lbl_value;
     private float maxValue;
 
+    public bool IsButtonHovered { get; private set; }
+
 
     public void Show(bool isShow)
     {
@@ -25,6 +29,7 @@ public class UI_Bar
 
     public UI_Bar(string name, RenderMode renderMode,  Vector2 size, Vector2 anchoredPos, Color color, float scale = 1f, Transform parent = null, float maxValue = 100f, Vector2? anchor = null, Vector3? localOffset = null, float nameLabelHight = -15f)
     {
+
         this.maxValue = maxValue;
         //sprite
         Texture2D tex = new Texture2D(1, 1);
@@ -98,8 +103,12 @@ public class UI_Bar
         return label;
     }
 
-    public GameObject AddButton(string text, Vector2 size, Vector2 anchoredPos, Color color)
+    public GameObject AddButton(string text, Vector2 size, Vector2 anchoredPos, Color color, Action action)
     {
+        if (canvas.GetComponent<GraphicRaycaster>() == null)
+            canvas.gameObject.AddComponent<GraphicRaycaster>();
+        canvas.worldCamera = Camera.main;
+
         GameObject obj = new GameObject("Button");
         obj.transform.SetParent(canvas.transform, false);
 
@@ -107,6 +116,18 @@ public class UI_Bar
         img.sprite = Sp_fillBarr;
         img.color = color;
         SetRect(obj.GetComponent<RectTransform>(), size, anchoredPos, null);
+
+        Button btn = obj.AddComponent<Button>();
+        btn.targetGraphic = img;
+        var colors = btn.colors;
+        colors.normalColor = color;
+        colors.highlightedColor = color * 1.3f;
+        colors.pressedColor = color * 0.7f;
+        btn.colors = colors;
+        btn.onClick.AddListener(() => action?.Invoke());
+        var hover = obj.AddComponent<ButtonHoverFlag>();
+        hover.Owner = this;
+
 
         // le texte est enfant du bouton, centré dessus
         CreateLabel(obj.transform, text, size, Vector2.zero, 16, Color.white);
@@ -135,6 +156,12 @@ public class UI_Bar
     public TextMeshProUGUI GetValueLabel() { return Lbl_value; }
     public Image GetFilledImage() { return Img_fill; }
 
-
+    public class ButtonHoverFlag : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+    {
+        public UI_Bar Owner;
+        public void OnPointerEnter(PointerEventData e) { Owner.IsButtonHovered = true; }
+        public void OnPointerExit(PointerEventData e) { Owner.IsButtonHovered = false; }
+        void OnDisable() { Owner.IsButtonHovered = false; }   // barre masquée : on remet à zéro
+    }
 
 }
