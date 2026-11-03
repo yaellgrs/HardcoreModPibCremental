@@ -26,8 +26,12 @@ public static class RevoltManager
     public static float Average => _count == 0 ? 0f : _sum / _count;
 
     public static List<float> revoltPool;
+    public static TextMeshProUGUI Lbl_revoltMoyenne;
+
+    public const string MoyenneRevoltPrefix = "Revolt Moyenne : "; 
 
     public static float time = 0f;
+    public static float timePopularity = 0f;
 
 
     //events
@@ -68,31 +72,36 @@ public static class RevoltManager
 
     private static void OnAverage(float avg)
     {
-        SetPopularity(1.0f - avg);
+        refreshRevoltMoyenne();
+    }
+
+    private static void UpChefPopularity(float delta)
+    {
+        ChefPopularity = Mathf.Clamp(ChefPopularity + delta, 0f, 1f);
+        refreshChefPopularityUI();
     }
 
     #endregion
 
-    public static void SetPopularity(float value)
-    {
-        ChefPopularity = Mathf.Clamp(value, 0, 1.0f);
-        refreshUI();
-    }
-
-    public static void UpPopularity(float delta)
-    {
-        SetPopularity(ChefPopularity + delta);
-    }
-
-    public static void refreshUI()
+    public static void refreshRevoltMoyenne()
     {
         if(Lbl_pourcent != null){
-            Lbl_pourcent.text = (int)(ChefPopularity *100) + "%";
+            Lbl_revoltMoyenne.text = MoyenneRevoltPrefix + Average * 100 + "%";
+        }
+        else
+        {
+            Debug.LogError("IMG_fill Bar is null");
+        }
+    }
+    public static void refreshChefPopularityUI()
+    {
+        if (Lbl_pourcent != null)
+        {
+            Lbl_pourcent.text = ChefPopularity * 100 + "%";
         }
         if (Img_fillBar != null)
         {
-            Img_fillBar.fillAmount = ChefPopularity/1.0f;
-            Debug.Log("img fill amount : " + Img_fillBar.fillAmount);
+            Img_fillBar.fillAmount = ChefPopularity;
         }
         else
         {
@@ -113,23 +122,82 @@ public static class RevoltManager
         Img_fillBar = bar.GetFilledImage();
     }
 
+    public static void CreateRevoltMoyenne()
+    {
+        GameObject canvasObj = new GameObject();
+        Canvas canvas = canvasObj.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 100;
+
+        GameObject obj = new GameObject("background");
+        obj.transform.SetParent(canvas.transform, false);
+
+        Lbl_revoltMoyenne = obj.AddComponent<TextMeshProUGUI>();
+        Lbl_revoltMoyenne.text = MoyenneRevoltPrefix + "100.00%";
+        Lbl_revoltMoyenne.color = Color.black;
+        Lbl_revoltMoyenne.fontSize = 22;
+        Lbl_revoltMoyenne.fontWeight = FontWeight.Bold;
+        Lbl_revoltMoyenne.alignment = TextAlignmentOptions.Center;
+
+        RectTransform rect = obj.GetComponent<RectTransform>();
+        Vector2 anchor = new Vector2(0.5f, 1f);
+        rect.anchorMin = anchor;
+        rect.anchorMax = anchor;
+        rect.pivot = anchor;
+        rect.sizeDelta = new Vector2(500, 30);   
+        rect.anchoredPosition = new Vector2(0, -105);
+
+    }
+
 
 
     public static void Update()
     {
         time += Time.deltaTime;
+        timePopularity += Time.deltaTime;
         if (time > 1f)
         {
             time = 0f;
             for(int i = 0; i< revoltPool.Count; i++)
             {
-                if (UnityEngine.Random.Range(0, 100) <= 5)
+                if (UnityEngine.Random.Range(0, 100) <= GetProbabilityRevolt())
                 {
                     revoltPool[i] = Mathf.Max(0f, revoltPool[i] - 0.01f);
                 }
             }
 
+
         }
+        if(timePopularity > 10f)
+        {
+            timePopularity = 0f;
+            if (Average >= 0.9f)
+            {
+                UpChefPopularity(0.005f);
+            }
+            else if (Average >= 0.75f)
+            {
+                //rien
+            }
+            else if (Average >= 0.5f)
+            {
+                UpChefPopularity(-0.005f);
+            }
+            else if (Average >= 0.25f)
+            {
+                UpChefPopularity(0.01f);
+            }
+            else
+            {
+                UpChefPopularity(0.015f);
+            }
+        }
+    }
+
+
+    public static float GetProbabilityRevolt()
+    {
+        return 10f;
     }
 }
 /*

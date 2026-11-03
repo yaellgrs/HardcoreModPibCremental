@@ -89,6 +89,7 @@ public class PibRevolution : BaseUnityPlugin
         static void Postfix()
         {
             RevoltManager.CreatePopularityBarre();
+            RevoltManager.CreateRevoltMoyenne();
 
         }
     }
@@ -99,21 +100,6 @@ public class PibRevolution : BaseUnityPlugin
         static void Postfix()
         {
             if (Keyboard.current == null) return;
-
-            if (Keyboard.current.aKey.wasPressedThisFrame)
-            {
-                Debug.Log("A");
-                RevoltManager.UpPopularity(-0.1f);
-            }
-            else if (Keyboard.current.eKey.wasPressedThisFrame)
-            {
-                Debug.Log("E");
-                RevoltManager.UpPopularity(0.1f);
-            }
-            else if (Keyboard.current.fKey.wasPressedThisFrame)
-            {
-                CS_PrestigeManager.Instance.AddPrestigeXpPercent(100);
-            }
         }
     }
 
