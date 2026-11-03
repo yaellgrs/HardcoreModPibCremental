@@ -25,7 +25,18 @@ public class PibRevolt : MonoBehaviour
         bar?.SetValue(Revolt);
     }
 
-    public void OnEnable() { RevoltManager.Register(Revolt); }
+    public void OnEnable() {
+        if (RevoltManager.revoltPool.Count > 0)
+        {
+            Revolt = RevoltManager.GetRevoltFromPool();
+        }
+        else
+        {
+            RevoltManager.Register(Revolt);
+        }
+        bar?.SetValue(Revolt);
+
+    }
     public void OnDisable() { RevoltManager.UnRegister(Revolt); }
 }
 

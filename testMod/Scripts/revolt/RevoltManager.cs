@@ -25,12 +25,17 @@ public static class RevoltManager
     public static float Sum => _sum;
     public static float Average => _count == 0 ? 0f : _sum / _count;
 
+    public static List<float> revoltPool;
+
+    public static float time = 0f;
+
 
     //events
     public static event Action<float> OnAverageChanged;
 
     public static void Init()
     {
+        if(revoltPool == null) revoltPool = new List<float>();
         OnAverageChanged -= OnAverage;
         OnAverageChanged += OnAverage;
     }
@@ -52,9 +57,13 @@ public static class RevoltManager
 
     public static void UnRegister(float revolt)
     {
-        _count--;
-        _sum -= revolt;
-        OnAverageChanged?.Invoke(Average);
+        revoltPool.Add(revolt);
+    }
+
+    public static float GetRevoltFromPool() {
+        float value = revoltPool[0];
+        revoltPool.RemoveAt(0);
+        return value;
     }
 
     private static void OnAverage(float avg)
@@ -104,9 +113,23 @@ public static class RevoltManager
         Img_fillBar = bar.GetFilledImage();
     }
 
+
+
     public static void Update()
     {
+        time += Time.deltaTime;
+        if (time > 1f)
+        {
+            time = 0f;
+            for(int i = 0; i< revoltPool.Count; i++)
+            {
+                if (UnityEngine.Random.Range(0, 100) <= 5)
+                {
+                    revoltPool[i] = Mathf.Max(0f, revoltPool[i] - 0.01f);
+                }
+            }
 
+        }
     }
 }
 /*
