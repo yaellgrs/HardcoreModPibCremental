@@ -77,6 +77,7 @@ public static class RevoltManager
 
     private static void UpChefPopularity(float delta)
     {
+        Debug.Log("up chef popularity : " + delta);
         ChefPopularity = Mathf.Clamp(ChefPopularity + delta, 0f, 1f);
         refreshChefPopularityUI();
     }
@@ -95,6 +96,7 @@ public static class RevoltManager
     }
     public static void refreshChefPopularityUI()
     {
+        Debug.Log("refresh Chef popularityUI");
         if (Lbl_pourcent != null)
         {
             Lbl_pourcent.text = (ChefPopularity * 100).ToString("F2") + "%";
@@ -133,7 +135,7 @@ public static class RevoltManager
         obj.transform.SetParent(canvas.transform, false);
 
         Lbl_revoltMoyenne = obj.AddComponent<TextMeshProUGUI>();
-        Lbl_revoltMoyenne.text = MoyenneRevoltPrefix + "100.00%";
+        Lbl_revoltMoyenne.text = MoyenneRevoltPrefix + "0%";
         Lbl_revoltMoyenne.color = Color.black;
         Lbl_revoltMoyenne.fontSize = 22;
         Lbl_revoltMoyenne.fontWeight = FontWeight.Bold;
@@ -171,25 +173,25 @@ public static class RevoltManager
         if(timePopularity > 10f)
         {
             timePopularity = 0f;
-            if (Average >= 0.9f)
+            if (Average < 0.1f)
             {
                 UpChefPopularity(0.005f);
             }
-            else if (Average >= 0.75f)
+            else if (Average < 0.25f)
             {
                 //rien
             }
-            else if (Average >= 0.5f)
+            else if (Average < 0.5f)
             {
                 UpChefPopularity(-0.005f);
             }
-            else if (Average >= 0.25f)
+            else if (Average < 0.75f)
             {
-                UpChefPopularity(0.01f);
+                UpChefPopularity(-0.01f);
             }
             else
             {
-                UpChefPopularity(0.015f);
+                UpChefPopularity(-0.02f);
             }
         }
     }

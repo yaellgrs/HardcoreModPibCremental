@@ -145,7 +145,7 @@ public class FreezeSapPibMovement
             time = 0f;
             if(UnityEngine.Random.Range(0, 100) <= RevoltManager.GetProbabilityRevolt())
             {
-                __instance.GetComponent<PibRevolt>()?.Add(0.01f);
+                __instance.GetComponent<PibRevolt>()?.Add(0.20f);
             }
         }
 

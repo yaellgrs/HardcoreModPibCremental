@@ -21,10 +21,11 @@ public class PibRevolt : MonoBehaviour
 
     public void Add(float delta)
     {
+        float oldRevolt = Revolt;
         Revolt = Mathf.Clamp(Revolt + delta, 0f, 1f);
         bar?.SetValue(Revolt);
 
-        RevoltManager.NotifyRevoltChange(delta);
+        RevoltManager.NotifyRevoltChange(Revolt - oldRevolt);
         UpStatut();
     }
 
