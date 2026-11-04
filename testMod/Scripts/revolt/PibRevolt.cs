@@ -16,7 +16,14 @@ public class PibRevolt : MonoBehaviour
     public float Revolt = 0.0f;
     public UI_Bar bar;
 
+    public bool Strike = false;
+
     public RevoltStatut statut;
+
+    public float time = 0f;
+    public float strikeTimer = 0f;
+    private float _cooldown = 0f;
+    public const float STRIKE_TIME = 10f;
 
 
     public void Add(float delta)
@@ -57,5 +64,38 @@ public class PibRevolt : MonoBehaviour
 
     }
     public void OnDisable() { RevoltManager.UnRegister(Revolt); }
+
+
+
+    public void Update()
+    {
+        time += Time.deltaTime;
+        if (time > 1f)
+        {
+            time = 0f;
+            if (UnityEngine.Random.Range(0, 100) <= RevoltManager.GetProbabilityRevolt())
+            {
+                Add(0.20f);
+            }
+            if (strikeTimer <= 0 && _cooldown  <= 0f && UnityEngine.Random.Range(0, 100) <= 1)
+            {
+                strikeTimer = UnityEngine.Random.Range(STRIKE_TIME / 2, STRIKE_TIME);
+                Strike = true;
+            }
+        }
+        if (Strike)
+        {
+            strikeTimer -= Time.deltaTime;
+            if (strikeTimer <= 0f)
+            {
+                Strike = false;
+                _cooldown = 10f;  
+            }
+        }
+        else if (_cooldown > 0f)
+        {
+            _cooldown -= Time.deltaTime;
+        }
+    }
 }
 

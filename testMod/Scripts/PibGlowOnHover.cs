@@ -26,6 +26,8 @@ public class PibGlowOnHover : MonoBehaviour
 
     public static bool locked = false;
 
+    public bool striked = false;
+
 
     public void Initialize(UI_Bar bar)
     {
@@ -72,52 +74,39 @@ public class PibGlowOnHover : MonoBehaviour
 
         bool isOverThis = _myCollider.OverlapPoint(mouseWorld);
 
-        if (isOverThis && !isHovered && sapInstance == null)
-        {
-            isHovered = true;
-            sapInstance = _sap;
-            OnHoverEnter();
-        }
-        else if (!locked && !isOverThis && isHovered)
-        {
-            isHovered = false;
-            OnHoverExit();
-            sapInstance = null;
-        }
-
-
         if (Mouse.current.rightButton.wasPressedThisFrame)
-        {
-            if (isOverThis) locked = true;
-            if (!isOverThis && locked) locked = false;
-        }
+            locked = isOverThis ? !locked : false;
 
+        bool shouldShow = isOverThis || locked;
+        if (shouldShow && !isHovered) { isHovered = true; OnHoverEnter(); }
+        else if (!shouldShow && isHovered) { isHovered = false; OnHoverExit(); }
+
+        var r = GetComponent<PibRevolt>();
+        striked = r != null && r.Strike;
+
+        bool shouldPause = striked || isOverThis || locked;
+        if (shouldPause && !_paused) Pause();
+        else if (!shouldPause && _paused) Resume();
     }
-
     private void Pause()
     {
-        if (_paused || sapInstance == null) return;
         var brain = CS_SapPibBrain.Instance;
         if (brain == null) return;
-
-        brain.SetPaused(sapInstance, true);
+        brain.SetPaused(_sap, true);
         if (_anim != null) _anim.speed = 0f;
         _paused = true;
     }
 
     private void Resume()
     {
-        if (!_paused) return;
-        _paused = false;
-
         var brain = CS_SapPibBrain.Instance;
-        if (brain != null && sapInstance != null) brain.SetPaused(sapInstance, false);
+        if (brain != null) brain.SetPaused(_sap, false);
         if (_anim != null) _anim.speed = 1f;
+        _paused = false;
     }
 
     private void OnHoverEnter()
     {
-        Pause();
         if (_outlineMaterial == null) return;
         _renderer.material = _outlineMaterial;
         _outlineMaterial.SetColor("_OutlineColor", Color.white);
@@ -126,32 +115,12 @@ public class PibGlowOnHover : MonoBehaviour
 
     private void OnHoverExit()
     {
-        Resume();
         if (_originalMaterial == null) return;
         _renderer.material = _originalMaterial;
         if (bar != null) bar.Show(false);
     }
 }
 
-[HarmonyPatch(typeof(CS_SapPibbleBehaviour), "UpdateVisuals")]
-public class FreezeSapPibMovement
-{
-    public static float time = 0f;
-    static void Prefix(CS_SapPibbleBehaviour __instance)
-    {
-        time += Time.deltaTime;
-        if (time > 1f)
-        {
-            time = 0f;
-            if(UnityEngine.Random.Range(0, 100) <= RevoltManager.GetProbabilityRevolt())
-            {
-                __instance.GetComponent<PibRevolt>()?.Add(0.20f);
-            }
-        }
-
-    }
-
-}
 
 [HarmonyPatch]
 public class AffectPibProductivity
