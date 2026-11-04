@@ -5,11 +5,19 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
+public enum RevoltStatut
+{
+    Discontent, Strike, ProlongedStrike, Protest, Uprising
+}
+
 
 public class PibRevolt : MonoBehaviour
 {
     public float Revolt = 0.0f;
     public UI_Bar bar;
+
+    public RevoltStatut statut;
+
 
     public void Add(float delta)
     {
@@ -17,6 +25,16 @@ public class PibRevolt : MonoBehaviour
         bar?.SetValue(Revolt);
 
         RevoltManager.NotifyRevoltChange(delta);
+        UpStatut();
+    }
+
+    private void UpStatut()
+    {
+        if(Revolt < 0.5f)       statut = RevoltStatut.Discontent;
+        else if(Revolt < 0.75f) statut = RevoltStatut.Strike;
+        else if (Revolt < 0.9f) statut = RevoltStatut.ProlongedStrike;
+        else if(Revolt < 1f)    statut = RevoltStatut.Protest;
+        else                    statut = RevoltStatut.Uprising;
     }
 
     public void Init(UI_Bar bar)

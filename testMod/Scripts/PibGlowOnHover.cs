@@ -152,3 +152,62 @@ public class FreezeSapPibMovement
     }
 
 }
+
+[HarmonyPatch]
+public class AffectPibProductivity
+{
+    static IEnumerable<MethodBase> TargetMethods()
+    {
+        yield return AccessTools.PropertyGetter(typeof(CS_WorkerPibBase), "WalkSpeed");
+        yield return AccessTools.PropertyGetter(typeof(CS_WorkerPibBase), "ClimbSpeed");
+
+    }
+
+    static void Postfix(CS_WorkerPibBase __instance, ref float __result)
+    {
+        PibRevolt revolt = __instance.GetComponent<PibRevolt>();
+        if (revolt != null) __result *= GetProductivity(revolt.Revolt);
+    }
+
+    public static float GetProductivity(float revolt)
+    {
+        return 1f- (Mathf.Clamp(revolt, 0f, 0.5f) * 1.5f);
+    }
+}
+
+[HarmonyPatch(typeof(CS_WorkerPibBase), nameof(CS_WorkerPibBase.ParticleValueMultiplier), MethodType.Getter)]
+public class SlowWorkerYield
+{
+    static void Postfix(CS_WorkerPibBase __instance, ref double __result)
+    {
+        var r = __instance.GetComponent<PibRevolt>();
+        if (r != null) __result *= AffectPibProductivity.GetProductivity(r.Revolt);
+    }
+}
+
+[HarmonyPatch(typeof(CS_SapPibBrain), "StartSpewing")]
+public static class StartSpewingPatch
+{
+    static void Prefix(CS_SapPibBrain __instance, ref float __2)
+    {
+        var r = __instance.GetComponent<PibRevolt>();
+        if (r != null) __2 *= AffectPibProductivity.GetProductivity(r.Revolt);
+    }
+}
+
+
+[HarmonyPatch(typeof(CS_SapPibbleBehaviour), "PlaySpewVisuals")]
+public static class SlowSapParticle
+{
+    static void Prefix(CS_SapPibbleBehaviour __instance)
+    {
+        bool isRainbow = (bool)AccessTools.Field( typeof(CS_SapPibbleBehaviour), "_spewingRainbow").GetValue(__instance);
+        ParticleSystem particleSystem = isRainbow ? __instance.RainbowSpewerSystem : __instance.SpewerSystem;
+
+        var r = __instance.GetComponent<PibRevolt>();
+        if (particleSystem != null && r != null)
+        {
+            particleSystem.playbackSpeed = AffectPibProductivity.GetProductivity(r.Revolt);
+        }
+    }
+}

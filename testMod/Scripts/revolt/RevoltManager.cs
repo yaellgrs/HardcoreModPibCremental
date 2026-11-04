@@ -86,7 +86,7 @@ public static class RevoltManager
     public static void refreshRevoltMoyenne()
     {
         if(Lbl_pourcent != null){
-            Lbl_revoltMoyenne.text = MoyenneRevoltPrefix + Average * 100 + "%";
+            Lbl_revoltMoyenne.text = MoyenneRevoltPrefix + (Average * 100).ToString("F2") + "%";
         }
         else
         {
@@ -97,7 +97,7 @@ public static class RevoltManager
     {
         if (Lbl_pourcent != null)
         {
-            Lbl_pourcent.text = ChefPopularity * 100 + "%";
+            Lbl_pourcent.text = (ChefPopularity * 100).ToString("F2") + "%";
         }
         if (Img_fillBar != null)
         {
